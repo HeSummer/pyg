@@ -22,7 +22,8 @@ public class ItemCatController {
 
 	@Reference
 	private ItemCatService itemCatService;
-	
+	private Long parentId;
+
 	/**
 	 * 返回全部列表
 	 * @return
@@ -92,17 +93,21 @@ public class ItemCatController {
 	@RequestMapping("/delete")
 	public Result delete(Long [] ids){
 		try {
-			itemCatService.delete(ids);
-			return new Result(true, "删除成功"); 
+			boolean delete = itemCatService.delete(ids);
+			if(delete){
+				return new Result(true, "删除成功！");
+			}else{
+				return new Result(false, "删除失败,请先删除下级资料！");
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			return new Result(false, "删除失败");
+			return new Result(false, "删除失败！");
 		}
+
 	}
 	
 		/**
 	 * 查询+分页
-	 * @param brand
 	 * @param page
 	 * @param rows
 	 * @return
@@ -111,5 +116,10 @@ public class ItemCatController {
 	public PageResult search(@RequestBody TbItemCat itemCat, int page, int rows  ){
 		return itemCatService.findPage(itemCat, page, rows);		
 	}
-	
+
+	@RequestMapping("/findByParentId")
+	public List<TbItemCat> findByParentId(Long parentId){
+		return itemCatService.findByParentId(parentId);
+	}
+
 }

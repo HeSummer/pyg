@@ -74,14 +74,23 @@ public class ItemCatServiceImpl implements ItemCatService {
 	 * 批量删除
 	 */
 	@Override
-	public void delete(Long[] ids) {
+	public boolean delete(Long[] ids) {
+		boolean flag= false;
 		for(Long id:ids){
-			itemCatMapper.deleteByPrimaryKey(id);
-		}		
+			List<TbItemCat> byParentId = findByParentId(id);
+			if(byParentId.size()==0){
+				itemCatMapper.deleteByPrimaryKey(id);
+				flag=true;
+			}else {
+				return false;
+			}
+		}
+		return flag;
 	}
+
+
 	
-	
-		@Override
+	@Override
 	public PageResult findPage(TbItemCat itemCat, int pageNum, int pageSize) {
 		PageHelper.startPage(pageNum, pageSize);
 		
@@ -98,5 +107,21 @@ public class ItemCatServiceImpl implements ItemCatService {
 		Page<TbItemCat> page= (Page<TbItemCat>)itemCatMapper.selectByExample(example);		
 		return new PageResult(page.getTotal(), page.getResult());
 	}
+
+
+	//查询上一级的信息
+	@Override
+	public List<TbItemCat> findByParentId(Long parent) {
+		TbItemCatExample example=new TbItemCatExample();
+		Criteria criteria = example.createCriteria();
+		criteria.andParentIdEqualTo(parent);
+		List<TbItemCat> tbItemCats = itemCatMapper.selectByExample(example);
+		return tbItemCats;
+	}
+
+
+
+
+
 	
 }

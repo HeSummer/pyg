@@ -81,6 +81,8 @@ app.controller('typeTemplateController' ,function($scope,$controller   ,typeTemp
 		);
 	}
 
+
+
 	$scope.brandList={data:[]} //品牌列表
 
 	$scope.findBrandList=function () {
@@ -123,6 +125,8 @@ app.controller('typeTemplateController' ,function($scope,$controller   ,typeTemp
 			}
 			return value;
 	}
+
+
 
 
 });

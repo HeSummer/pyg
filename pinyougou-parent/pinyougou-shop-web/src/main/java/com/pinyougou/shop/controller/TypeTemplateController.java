@@ -120,4 +120,14 @@ public class TypeTemplateController {
 	public List<Map> selctOptionList(){
 		return typeTemplateService.selctOptionList();
 	}
+
+
+	/**
+	 * 查询规格信息
+	 * */
+	@RequestMapping("/findSpecList")
+	public List<Map> findSpecList(Long id){
+		return typeTemplateService.findSpecList(id);
+	}
+
 }

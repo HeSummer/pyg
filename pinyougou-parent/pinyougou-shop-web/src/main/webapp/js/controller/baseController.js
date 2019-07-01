@@ -29,5 +29,19 @@ app.controller('baseController' ,function($scope){
             $scope.selectIds.splice(idx, 1);//删除 
 		}
 	}
+
+
+
+	//从集合中按照 key 查询对象
+	$scope.searchObjectByKey=function (list,key,keyValue) {
+
+		for(var i=0;i<list.length;i++){
+			if(list[i][key]==keyValue){
+				return list[i];
+			}
+		}
+		return null;
+	}
+
 	
 });	

@@ -120,4 +120,9 @@ public class TypeTemplateController {
 	public List<Map> selctOptionList(){
 		return typeTemplateService.selctOptionList();
 	}
+
+
+
+
+
 }

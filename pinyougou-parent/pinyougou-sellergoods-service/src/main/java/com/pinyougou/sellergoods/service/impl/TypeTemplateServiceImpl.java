@@ -2,6 +2,11 @@ package com.pinyougou.sellergoods.service.impl;
 import java.util.List;
 import java.util.Map;
 
+
+import com.alibaba.fastjson.JSON;
+import com.pinyougou.mapper.TbSpecificationOptionMapper;
+import com.pinyougou.pojo.TbSpecificationOption;
+import com.pinyougou.pojo.TbSpecificationOptionExample;
 import com.pinyougou.sellergoods.service.TypeTemplateService;
 import org.springframework.beans.factory.annotation.Autowired;
 import com.alibaba.dubbo.config.annotation.Service;
@@ -113,4 +118,23 @@ public class TypeTemplateServiceImpl implements TypeTemplateService {
 		return typeTemplateMapper.selctOptionList();
 	}
 
+	@Autowired
+	private TbSpecificationOptionMapper specificationOptionMapper;
+
+	@Override
+	public List<Map> findSpecList(Long id) {
+		//通过模板id信息获得规格id
+		TbTypeTemplate tbTypeTemplate = typeTemplateMapper.selectByPrimaryKey(id);
+		//通过将json信息转为map对象
+		List<Map> maps = JSON.parseArray(tbTypeTemplate.getSpecIds(), Map.class);
+		//遍历map,获得规格详细信息
+		for(Map map :maps){
+			TbSpecificationOptionExample example=new TbSpecificationOptionExample();
+			TbSpecificationOptionExample.Criteria criteria = example.createCriteria();
+			criteria.andSpecIdEqualTo(new Long( (Integer)map.get("id") ));
+			List<TbSpecificationOption> options = specificationOptionMapper.selectByExample(example);
+			map.put("options", options);
+		}
+		return maps;
+	}
 }

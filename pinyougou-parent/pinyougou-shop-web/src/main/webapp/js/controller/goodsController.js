@@ -116,7 +116,7 @@ app.controller('goodsController' ,function($scope,$controller   ,goodsService,up
 
 
 
-	$scope.entity={goods:{},goodsDesc:{itemImages:[]}};//定义页面结构实体
+	$scope.entity={goods:{},goodsDesc:{itemImages:[],specificationItems:[]}};//定义页面结构实体
 	//添加图片列表
 	$scope.add_image_entity=function(){
 		$scope.entity.goodsDesc.itemImages.push($scope.image_entity);
@@ -162,7 +162,7 @@ app.controller('goodsController' ,function($scope,$controller   ,goodsService,up
 
 //三级分类选择后 读取模板 ID
 	$scope.$watch('entity.goods.category3Id', function(newValue, oldValue) {
-		alert(newValue);
+		//alert(newValue);
 		itemCatService.findOne(newValue).success(
 			function(response){
 				$scope.entity.goods.typeTemplateId=response.typeId; //更新模板 ID
@@ -186,11 +186,75 @@ app.controller('goodsController' ,function($scope,$controller   ,goodsService,up
 		typeTemplateService.findOne(newValue).success(
 			function(response){
 				$scope.typeTemplate=response;//获取类型模板
-				$scope.typeTemplate.brandIds=
-					JSON.parse( $scope.typeTemplate.brandIds);//品牌列表
+				$scope.typeTemplate.brandIds=JSON.parse( $scope.typeTemplate.brandIds);//品牌列表
+				//扩展属性列表
+				$scope.entity.goodsDesc.customAttributeItems=JSON.parse($scope.typeTemplate.customAttributeItems);
 			}
 		);
+
+
+		typeTemplateService.findSpecList(newValue).success(
+			function (response) {
+				$scope.specList=response;
+			}
+		);
+
 	});
+
+
+	//选择根据详细规格
+	$scope.updateSpecAttribute=function ($event,name,value) {
+		var object=$scope.searchObjectByKey($scope.entity.goodsDesc.specificationItems,'attributeName',name);
+		if (object!=null){
+			if($event.target.checked){
+				object.attributeValue.push(value);//添加规格XX的值
+			}else{//取消勾选
+				object.attributeValue.splice(object.attributeValue.indexOf(value),1);//去掉规格XX的值
+				//如果选项都取消了，将此条记录移除
+				if(object.attributeValue.length==0){
+					$scope.entity.goodsDesc.specificationItems.splice(
+					$scope.entity.goodsDesc.specificationItems.indexOf(object),1);
+				}
+			}
+		}else{
+			$scope.entity.goodsDesc.specificationItems.push(
+				{"attributeName":name,"attributeValue":[value]}
+			);
+		}
+	}
+
+
+
+
+	//创建 SKU 列表
+	$scope.createItemList=function () {
+		//创建一个模板的列表
+		$scope.entity.itemList=[{spec:{},price:0,num:99,status:'0',isDefault:'0'}];//初始化
+		//点击的规格信息
+		var items= $scope.entity.goodsDesc.specificationItems;
+		//循环
+		for(var i=0;i< items.length;i++){
+			$scope.entity.itemList = addColumn( $scope.entity.itemList,items[i].attributeName,items[i].attributeValue );
+		}
+	}
+
+	//创建新的
+	addColumn=function (list,columnName,conlumnValues) {
+		var newList=[];//先定义一个新的集合
+		for(var i=0;i<list.length;i++){
+			//获得旧的列表
+			var oldRow=list[i];
+			for(var j=0;j<conlumnValues.length;j++){
+				var newRow=JSON.parse(JSON.stringify(oldRow));//深克隆
+				newRow.spec[columnName]=conlumnValues[j];
+				newList.push(newRow);//将新列表添加进去
+			}
+		}
+		return newList;
+	}
+
+
+
 
 
 });	

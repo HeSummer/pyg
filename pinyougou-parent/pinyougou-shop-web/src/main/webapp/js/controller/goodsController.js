@@ -1,6 +1,6 @@
  //控制层 
-app.controller('goodsController' ,function($scope,$controller   ,goodsService){	
-	
+app.controller('goodsController' ,function($scope,$controller   ,goodsService,uploadService,itemCatService,typeTemplateService){
+
 	$controller('baseController',{$scope:$scope});//继承
 	
     //读取列表数据绑定到表单中  
@@ -50,6 +50,26 @@ app.controller('goodsController' ,function($scope,$controller   ,goodsService){
 			}		
 		);				
 	}
+
+
+	//新增
+	$scope.add=function(){
+		$scope.entity.goodsDesc.introduction=editor.html();
+		var serviceObject;//服务层对象
+		serviceObject=goodsService.add( $scope.entity  );//增加
+		serviceObject.success(
+			function(response){
+				if(response.success){
+					alert(response.message);
+					//重新清空列表
+					$scope.entity={};
+				    editor.html('');//清空富文本编辑器
+				}else{
+					alert(response.message);
+				}
+			}
+		);
+	}
 	
 	 
 	//批量删除 
@@ -76,5 +96,101 @@ app.controller('goodsController' ,function($scope,$controller   ,goodsService){
 			}			
 		);
 	}
-    
+
+	/**
+	 * 上传图片
+	 */
+	$scope.uploadFile=function () {
+		uploadService.uploadFile().success(
+			function (response) {
+				if(response.success){//如果上传成功，则取出url
+				$scope.image_entity.url=response.message;
+				}else{
+					alert(response.message);
+				}
+			}
+		).error(function () {
+			alert("上传失败！");
+		});
+	}
+
+
+
+	$scope.entity={goods:{},goodsDesc:{itemImages:[]}};//定义页面结构实体
+	//添加图片列表
+	$scope.add_image_entity=function(){
+		$scope.entity.goodsDesc.itemImages.push($scope.image_entity);
+	}
+
+
+
+	//列表中移除图片
+	$scope.remove_image_entity=function(index){
+		$scope.entity.goodsDesc.itemImages.splice(index,1);
+	}
+
+	//读取一级分类
+	$scope.selectItemCat1List=function () {
+		itemCatService.findByParentId(0).success(
+			function (response) {
+				$scope.itemCat1List=response;
+			}
+		);
+	}
+
+
+	//读取二级分类
+	$scope.$watch('entity.goods.category1Id',function (newValue,oldValue) {
+		//根据选择的值查找耳机分类
+		itemCatService.findByParentId(newValue).success(
+			function (response) {
+				$scope.itemCat2List=response;
+			}
+		);
+	});
+
+	//读取三级分类
+	$scope.$watch('entity.goods.category2Id',function (newValue,oldValue) {
+		//根据选择的值查找耳机分类
+		itemCatService.findByParentId(newValue).success(
+			function (response) {
+				$scope.itemCat3List=response;
+			}
+		);
+	});
+
+
+//三级分类选择后 读取模板 ID
+	$scope.$watch('entity.goods.category3Id', function(newValue, oldValue) {
+		alert(newValue);
+		itemCatService.findOne(newValue).success(
+			function(response){
+				$scope.entity.goods.typeTemplateId=response.typeId; //更新模板 ID
+			}
+		);
+	});
+
+
+	/*//读取模板信息
+	$scope.$watch('entity.goods.category3Id',function (newValue,oldValue) {
+		//根据选择的值查找二分类
+		typeTemplateService.findOne(newValue).success(
+			function (response) {
+				$scope.typeTemplate=response;//获取类型模板
+				$scope.typeTemplate.brandIds=JSON.parse( $scope.typeTemplate.brandIds);//品牌列表
+			}
+		);
+	});*/
+
+	$scope.$watch('entity.goods.typeTemplateId', function(newValue, oldValue) {
+		typeTemplateService.findOne(newValue).success(
+			function(response){
+				$scope.typeTemplate=response;//获取类型模板
+				$scope.typeTemplate.brandIds=
+					JSON.parse( $scope.typeTemplate.brandIds);//品牌列表
+			}
+		);
+	});
+
+
 });	

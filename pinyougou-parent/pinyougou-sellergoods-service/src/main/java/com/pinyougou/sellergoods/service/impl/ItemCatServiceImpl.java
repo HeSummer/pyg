@@ -13,13 +13,14 @@ import com.pinyougou.pojo.TbItemCatExample.Criteria;
 
 
 import entity.PageResult;
+import org.springframework.data.redis.core.RedisTemplate;
 
 /**
  * 服务实现层
  * @author Administrator
  *
  */
-@Service
+@Service(timeout = 10000)
 public class ItemCatServiceImpl implements ItemCatService {
 
 	@Autowired
@@ -108,7 +109,8 @@ public class ItemCatServiceImpl implements ItemCatService {
 		return new PageResult(page.getTotal(), page.getResult());
 	}
 
-
+	@Autowired
+	private RedisTemplate redisTemplate;
 	//查询上一级的信息
 	@Override
 	public List<TbItemCat> findByParentId(Long parent) {
@@ -116,6 +118,16 @@ public class ItemCatServiceImpl implements ItemCatService {
 		Criteria criteria = example.createCriteria();
 		criteria.andParentIdEqualTo(parent);
 		List<TbItemCat> tbItemCats = itemCatMapper.selectByExample(example);
+
+		//每次执行查询的时候，一次性读取缓存进行存储 (因为每次增删改都要执行此方法)
+		List<TbItemCat> all = findAll();
+		for(TbItemCat item:all){
+			redisTemplate.boundHashOps("itemCat").put(item.getName(),item.getTypeId());
+		}
+		System.out.println("更新缓存:商品分类表");
+
+
+
 		return tbItemCats;
 	}
 

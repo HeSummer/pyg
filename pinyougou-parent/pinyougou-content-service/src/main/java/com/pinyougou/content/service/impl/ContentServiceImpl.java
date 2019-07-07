@@ -13,6 +13,7 @@ import com.pinyougou.pojo.TbContentExample.Criteria;
 
 
 import entity.PageResult;
+import org.springframework.data.redis.core.RedisTemplate;
 
 /**
  * 服务实现层
@@ -43,12 +44,15 @@ public class ContentServiceImpl implements ContentService {
 		return new PageResult(page.getTotal(), page.getResult());
 	}
 
+
 	/**
 	 * 增加
 	 */
 	@Override
 	public void add(TbContent content) {
-		contentMapper.insert(content);		
+		contentMapper.insert(content);
+		redisTemplate.boundHashOps("content").delete(content.getCategoryId());//删除缓存
+
 	}
 
 	
@@ -57,7 +61,14 @@ public class ContentServiceImpl implements ContentService {
 	 */
 	@Override
 	public void update(TbContent content){
+		//查询修改前的分类 Id
+		Long categoryId = contentMapper.selectByPrimaryKey(content.getId()).getCategoryId();
+		redisTemplate.boundHashOps("content").delete(categoryId);//删除修改前的类别
 		contentMapper.updateByPrimaryKey(content);
+		//如果分类 ID 发生了修改,清除修改后的分类 ID 的缓存
+		if (categoryId.longValue()!=content.getCategoryId().longValue()){
+			redisTemplate.boundHashOps("content").delete(content.getCategoryId());
+		}
 	}	
 	
 	/**
@@ -76,7 +87,12 @@ public class ContentServiceImpl implements ContentService {
 	@Override
 	public void delete(Long[] ids) {
 		for(Long id:ids){
+			// 分类 ID
+			Long categoryId = contentMapper.selectByPrimaryKey(id).getCategoryId();
+			//清除缓存广告
+			redisTemplate.boundHashOps("content").delete(categoryId);
 			contentMapper.deleteByPrimaryKey(id);
+
 		}		
 	}
 	
@@ -108,6 +124,12 @@ public class ContentServiceImpl implements ContentService {
 		return new PageResult(page.getTotal(), page.getResult());
 	}
 
+
+
+	@Autowired
+	private RedisTemplate redisTemplate;
+
+
 	/**
 	 * 根据广告类型 ID 查询列表
 	 * @param categoryId
@@ -115,25 +137,23 @@ public class ContentServiceImpl implements ContentService {
 	 */
 	@Override
 	public List<TbContent> findByCategoryId(Long categoryId) {
-		TbContentExample example=new TbContentExample();
-		Criteria criteria = example.createCriteria();
-		criteria.andCategoryIdEqualTo(categoryId);//查询此id类型的所有广告
-		criteria.andStatusEqualTo("1");//广告状态为启用
-		example.setOrderByClause("sort_order");//排序
-		List<TbContent> tbContents = contentMapper.selectByExample(example);//
+		List<TbContent> list = (List<TbContent>) redisTemplate.boundHashOps("content").get(categoryId);
+		if (list == null) {
+			System.out.println("=====！从数据中查找数据！=====");
+			TbContentExample example = new TbContentExample();
+			Criteria criteria = example.createCriteria();
+			criteria.andCategoryIdEqualTo(categoryId);//查询此id类型的所有广告
+			criteria.andStatusEqualTo("1");//广告状态为启用
+			example.setOrderByClause("sort_order");//排序
+			list= contentMapper.selectByExample(example);
 
-		return tbContents;
+			redisTemplate.boundHashOps("content").put(categoryId, list);//存入缓存
+		} else {
+			System.out.println("=====！从缓存中查找数据！=====");
+		}
+
+		return list;
 	}
-
-
-
-
-
-
-
-
-
-
 
 
 

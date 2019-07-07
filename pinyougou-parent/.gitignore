@@ -1,0 +1,6 @@
+*.bak
+*.sym
+*.log
+*.png
+.gitignore
+*.iml

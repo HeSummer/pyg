@@ -18,13 +18,14 @@ import com.pinyougou.pojo.TbTypeTemplateExample;
 import com.pinyougou.pojo.TbTypeTemplateExample.Criteria;
 
 import entity.PageResult;
+import org.springframework.data.redis.core.RedisTemplate;
 
 /**
  * 服务实现层
  * @author Administrator
  *
  */
-@Service
+@Service(timeout = 5000)
 public class TypeTemplateServiceImpl implements TypeTemplateService {
 
 	@Autowired
@@ -89,6 +90,7 @@ public class TypeTemplateServiceImpl implements TypeTemplateService {
 		@Override
 	public PageResult findPage(TbTypeTemplate typeTemplate, int pageNum, int pageSize) {
 		PageHelper.startPage(pageNum, pageSize);
+
 		
 		TbTypeTemplateExample example=new TbTypeTemplateExample();
 		Criteria criteria = example.createCriteria();
@@ -106,10 +108,12 @@ public class TypeTemplateServiceImpl implements TypeTemplateService {
 			if(typeTemplate.getCustomAttributeItems()!=null && typeTemplate.getCustomAttributeItems().length()>0){
 				criteria.andCustomAttributeItemsLike("%"+typeTemplate.getCustomAttributeItems()+"%");
 			}
-	
 		}
 		
-		Page<TbTypeTemplate> page= (Page<TbTypeTemplate>)typeTemplateMapper.selectByExample(example);		
+		Page<TbTypeTemplate> page= (Page<TbTypeTemplate>)typeTemplateMapper.selectByExample(example);
+
+		saveToRedis();//存入数据到缓存
+
 		return new PageResult(page.getTotal(), page.getResult());
 	}
 
@@ -137,4 +141,31 @@ public class TypeTemplateServiceImpl implements TypeTemplateService {
 		}
 		return maps;
 	}
+	@Autowired
+	private RedisTemplate redisTemplate;
+	/**
+	 * 将数据存入缓存
+	 */
+	private void saveToRedis(){
+		//获取模板模板数据
+		List<TbTypeTemplate> all = findAll();
+		//循环模板数据
+		for(TbTypeTemplate tbTypeTemplate:all){
+			//存储品牌列表
+			List<Map> brandList = JSON.parseArray(tbTypeTemplate.getBrandIds(), Map.class);
+			redisTemplate.boundHashOps("brandList").put(tbTypeTemplate.getId(),brandList);//key 模板id  value 值
+
+			//存储规格列表
+			List<Map> specList = findSpecList(tbTypeTemplate.getId());//根据模板id查询规格列表
+			redisTemplate.boundHashOps("specList").put(tbTypeTemplate.getId(),specList);
+
+		}
+		System.out.println("更新缓存:商品品牌及规格信息");
+		List ccc = redisTemplate.boundHashOps("brandList").values();
+		System.out.println(ccc);
+	}
+
+
+
+
 }

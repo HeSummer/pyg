@@ -6,18 +6,34 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <module name="freemarker-demo" />
         <module name="mybatis_reverse" />
         <module name="pinyougou-common" />
         <module name="pinyougou-content-interface" />
         <module name="pinyougou-content-service" />
         <module name="pinyougou-dao" />
+        <module name="pinyougou-manager-web" />
+        <module name="pinyougou-page-interface" />
+        <module name="pinyougou-page-service" />
         <module name="pinyougou-pojo" />
         <module name="pinyougou-portal-web" />
-        <module name="pinyougoumanagerweb" />
-        <module name="pinyougousellergoodsinterface" />
-        <module name="pinyougousellergoodsservice" />
-        <module name="pinyougoushopweb" />
+        <module name="pinyougou-search-interface" />
+        <module name="pinyougou-search-service" />
+        <module name="pinyougou-search-web" />
+        <module name="pinyougou-sellergoods-interface" />
+        <module name="pinyougou-sellergoods-service" />
+        <module name="pinyougou-shop-web" />
+        <module name="spring-data-solr" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="freemarker-demo" target="1.5" />
+      <module name="pinyougoumanagerweb" target="1.8" />
+      <module name="pinyougousellergoodsinterface" target="1.8" />
+      <module name="pinyougousellergoodsservice" target="1.8" />
+      <module name="pinyougoushopweb" target="1.8" />
+      <module name="PYG" target="1.5" />
+      <module name="springdatasolr" target="1.8" />
+    </bytecodeTargetLevel>
   </component>
 </project>

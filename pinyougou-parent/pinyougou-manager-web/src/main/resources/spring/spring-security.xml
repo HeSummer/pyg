@@ -45,12 +45,12 @@
     </security:http>
 
    <!-- &lt;!&ndash; 切换成数据库中的用户名和密码 &ndash;&gt;
-    <security:authentication-shop>
+    <security:authentication-manager>
         <security:authentication-provider user-service-ref="userService">
             &lt;!&ndash; 配置加密的方式&ndash;&gt;
             <security:password-encoder ref="passwordEncoder"/>
         </security:authentication-provider>
-    </security:authentication-shop>-->
+    </security:authentication-manager>-->
 
     <!-- 配置加密类 -->
     <!--<bean id="passwordEncoder" class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder"/>-->
